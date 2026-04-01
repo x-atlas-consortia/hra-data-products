@@ -155,3 +155,4 @@ env.sh
 .venv
 docs/
 blazegraph.jnl
+graph.ttl
