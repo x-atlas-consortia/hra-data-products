@@ -1,0 +1,17 @@
+#+ summary: A list of unmapped AS, CT, and B terms in HRA
+
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ccf: <http://purl.org/ccf/>
+PREFIX ASCTB-TEMP: <https://purl.org/ccf/ASCTB-TEMP_>
+
+SELECT ?do_type (COUNT(DISTINCT ?iri) as ?count)
+WHERE {
+  GRAPH ?table {
+    ?iri ?p [] .
+    FILTER(STRSTARTS(STR(?iri), STR(ASCTB-TEMP:)))
+  }
+  BIND(STRBEFORE(REPLACE(STR(?table), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+}
+GROUP BY ?do_type
+ORDER BY ?do_type

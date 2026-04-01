@@ -3,7 +3,7 @@ export DEFAULT_LOD_IRI="https://lod.humanatlas.io/"
 export DEFAULT_CDN_IRI="https://cdn.humanatlas.io/digital-objects/"
 export CDN_S3_BUCKET="s3://cdn-humanatlas-io/data-products/"
 
-export BLAZEGRAPH_DB="blazegraph.jnl"
+export BLAZEGRAPH_DB="dist/hra-kg.blazegraph.jnl"
 export OUTPUT_DIR="docs"
 export VERSION="draft"
 

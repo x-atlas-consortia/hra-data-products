@@ -1,0 +1,26 @@
+#+ summary: All component graphs from collections in the KG
+
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX schema: <http://schema.org/>
+
+SELECT DISTINCT ?named_graph ?download_url
+WHERE {
+  GRAPH ?g {
+    [] a owl:Ontology ;
+      prov:hadMember ?component .
+  }
+  [] a dcat:Dataset ;
+    schema:version ?version ;
+    rdfs:seeAlso ?component ;
+    dcat:distribution [
+      dcat:downloadURL ?download_url ;
+      dcat:mediaType "text/turtle"^^xsd:string
+    ] ;
+  .
+  BIND(STRBEFORE(REPLACE(STR(?component), STR(?version), '___'), '/___') as ?named_graph)
+}
