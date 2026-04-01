@@ -1,0 +1,103 @@
+#+ summary: FTU exclusive cell types that occur in 2D and ASCT+B
+
+PREFIX hint: <http://www.bigdata.com/queryHints#> 
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ccf: <http://purl.org/ccf/>
+PREFIX CL: <http://purl.obolibrary.org/obo/CL_>
+PREFIX UBERON: <http://purl.obolibrary.org/obo/UBERON_>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX part_of: <http://purl.obolibrary.org/obo/BFO_0000050>
+PREFIX body: <http://purl.obolibrary.org/obo/UBERON_0013702>
+PREFIX HRA: <https://purl.humanatlas.io/collection/hra>
+PREFIX LOD: <https://lod.humanatlas.io>
+
+SELECT DISTINCT ?ftu_purl ?ftu_label ?ct_label ?in_2d_ftu ?in_asctb 
+  (IF(!BOUND(?not_exclusive) && ?in_asctb, true, '') as ?exclusive_ct_in_ftu)
+  ?ftu_iri ?ct_iri
+FROM HRA:
+FROM <https://purl.humanatlas.io/vocab/uberon>
+WHERE {
+  {
+    [
+      a ccf:FtuIllustrationNode ;
+      ccf:part_of_illustration ?ftu_illustration;
+      ccf:representation_of ?ct_iri ;
+    ] .
+    ?ftu_illustration ccf:representation_of ?ftu_iri .
+    FILTER(STRSTARTS(STR(?ct_iri), STR(CL:)))
+    BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?ftu_purl)
+    ?ftu_iri rdfs:label ?ftu_label .
+    ?ct_iri rdfs:label ?ct_label .
+    BIND(true as ?in_2d_ftu)
+  }
+
+  OPTIONAL {
+    [
+      a ccf:AsctbRecord ;
+      ccf:ftu_types [
+        ccf:source_concept ?ftu_iri
+      ];
+      ccf:cell_type [
+        ccf:source_concept ?ct_iri
+      ];
+    ] .
+    ?ftu_iri rdfs:label ?ftu_label .
+    ?ct_iri rdfs:label ?ct_label .
+    BIND(true as ?in_asctb)
+  }
+
+  OPTIONAL {
+    {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?ftu_iri .
+      ?record
+        a ccf:AsctbRecord ;
+        ccf:anatomical_structure [
+          ccf:source_concept ?as_iri ;
+          ccf:order_number ?as_order ;
+        ] ;
+        ccf:ftu_types [
+          ccf:source_concept ?ftu_iri
+        ];
+        ccf:cell_type [
+          ccf:source_concept ?ct_iri
+        ];
+      .
+      BIND(STRBEFORE(REPLACE(STRBEFORE(STR(?record), '#'), 'https://purl.humanatlas.io/asct-b/', ''), '/') as ?table)
+      FILTER(?as_order > 1)
+      hint:SubQuery hint:runOnce true .
+    }
+
+    {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?ftu_iri .
+      ?record2
+        a ccf:AsctbRecord ;
+        ccf:anatomical_structure [
+          ccf:source_concept ?as2_iri ;
+        ] ;
+        ccf:ftu_types [
+          ccf:source_concept ?ftu_iri
+        ];
+        ccf:cell_type [
+          ccf:source_concept ?ct_iri
+        ];
+      .
+      BIND(STRBEFORE(REPLACE(STRBEFORE(STR(?record2), '#'), 'https://purl.humanatlas.io/asct-b/', ''), '/') as ?table)
+      hint:SubQuery hint:runOnce true .
+    }
+
+    FILTER(NOT EXISTS {
+      ?as2_iri (ccf:ccf_part_of|part_of:)* ?as_iri .
+      hint:SubQuery hint:runOnce true .
+    })
+    FILTER(?record != ?record2 && ?as_iri != ?as2_iri && ?as_iri NOT IN (body:))
+    BIND(false as ?not_exclusive)
+    ?ftu_iri rdfs:label ?ftu_label .
+    ?ct_iri rdfs:label ?ct_label .
+  }
+}
+ORDER BY ?ftu_iri ?ct_iri

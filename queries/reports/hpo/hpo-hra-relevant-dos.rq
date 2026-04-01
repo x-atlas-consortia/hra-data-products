@@ -1,0 +1,220 @@
+#+ summary: HPO-relevant HRA Digital Objects
+
+PREFIX hint: <http://www.bigdata.com/queryHints#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ccf: <http://purl.org/ccf/>
+PREFIX CL: <http://purl.obolibrary.org/obo/CL_>
+PREFIX HPO: <https://purl.humanatlas.io/vocab/hp>
+PREFIX HRA: <https://purl.humanatlas.io/collection/hra>
+PREFIX HP: <http://purl.obolibrary.org/obo/HP_>
+PREFIX UBERON: <http://purl.obolibrary.org/obo/UBERON_>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+
+SELECT DISTINCT ?hpo_iri ?hpo_label ?term ?term_label ?do_type ?digital_object ?file_url
+WHERE {
+  {
+    GRAPH HRA: {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?term ;
+        ccf:image_file [
+          ccf:file_format ?format ;
+          ccf:file_url ?file_url
+        ] .
+      BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?digital_object)
+      BIND(STRBEFORE(REPLACE(STR(?ftu_illustration), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+      FILTER(STR(?format) = 'image/svg+xml')
+    }
+  }
+  UNION
+  {
+    GRAPH HRA: {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?ftu_iri ;
+        ccf:ccf_located_in ?term ;
+        ccf:image_file [
+          ccf:file_format ?format ;
+          ccf:file_url ?file_url
+        ] .
+      BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?digital_object)
+      BIND(STRBEFORE(REPLACE(STR(?ftu_illustration), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+      FILTER(STR(?format) = 'image/svg+xml')
+    }
+  }
+  UNION
+  {
+    GRAPH HRA: {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?ftu_iri ;
+        ccf:illustration_node [ ccf:representation_of ?term ] ;
+        ccf:image_file [
+          ccf:file_format ?format ;
+          ccf:file_url ?file_url
+        ] .
+      BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?digital_object)
+      BIND(STRBEFORE(REPLACE(STR(?ftu_illustration), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+      FILTER(STR(?format) = 'image/svg+xml')
+    }
+  }
+  UNION
+  {
+    GRAPH HRA: {
+      ?ftu_illustration a ccf:FtuIllustration ;
+        ccf:representation_of ?ftu_iri ;
+        ccf:ccf_located_in ?organ_id ;
+        ccf:illustration_node [ ccf:representation_of ?term ] ;
+        ccf:image_file [
+          ccf:file_format ?format ;
+          ccf:file_url ?file_url
+        ] .
+      BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?digital_object)
+      BIND(STRBEFORE(REPLACE(STR(?ftu_illustration), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+      FILTER(STR(?format) = 'image/svg+xml')
+    }
+  }
+  UNION
+  {
+    GRAPH HRA: {
+      [] a ccf:SpatialEntity ;
+        ccf:has_reference_organ ?refOrgan ;
+        ccf:representation_of ?term ;
+        ccf:has_object_reference [
+          ccf:file_url ?file_url
+        ] .
+      BIND(IRI(STRBEFORE(REPLACE(STR(?refOrgan), "#primary", ""), '/v1.')) as ?digital_object)
+      BIND(STRBEFORE(REPLACE(STR(?refOrgan), 'https://purl.humanatlas.io/', ''), '/') as ?do_type)
+      FILTER(!CONTAINS(STR(?refOrgan), '/ref-organ/united'))
+    }
+  }
+  GRAPH HRA: {
+    ?term rdfs:label ?term_label .
+  }
+  # GRAPH HPO: {
+  #   ?term rdfs:label ?term_label .
+  # }
+
+  GRAPH HPO: {
+    SELECT DISTINCT ?hpo_iri ?hpo_label (?asct as ?term)
+    WHERE {
+      ?hpo_iri a owl:Class ;
+                rdfs:label ?hpo_label .
+      FILTER(STRSTARTS(STR(?hpo_iri), STR(HP:)))
+
+      # follow expression through restrictions and intersections
+      ?hpo_iri (rdfs:subClassOf|owl:equivalentClass) ?x1 .
+
+      # depth 1
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 2
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 3
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 4
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 5
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 6
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x6 .
+        ?x6 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 7
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x6 .
+        ?x6 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x7 .
+        ?x7 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 8
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x6 .
+        ?x6 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x7 .
+        ?x7 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x8 .
+        ?x8 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 9
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x6 .
+        ?x6 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x7 .
+        ?x7 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x8 .
+        ?x8 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x9 .
+        ?x9 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      # depth 10
+      OPTIONAL {
+        ?x1 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x2 .
+        ?x2 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x3 .
+        ?x3 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x4 .
+        ?x4 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x5 .
+        ?x5 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x6 .
+        ?x6 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x7 .
+        ?x7 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x8 .
+        ?x8 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x9 .
+        ?x9 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?x10 .
+        ?x10 (owl:intersectionOf/rdf:rest*/rdf:first|owl:someValuesFrom|owl:onClass|owl:allValuesFrom) ?asct .
+        FILTER(STRSTARTS(STR(?asct), STR(obo:CL_)) || STRSTARTS(STR(?asct), STR(obo:UBERON_)))
+      }
+
+      FILTER(BOUND(?asct))
+      hint:SubQuery hint:runOnce true .
+    }
+  }
+  FILTER(STRSTARTS(STR(?term), STR(UBERON:)) || STRSTARTS(STR(?term), STR(CL:)))
+}
+ORDER BY ?do_type ?term

@@ -1,0 +1,28 @@
+{
+  "name": "hra-data-products",
+  "version": "0.0.1",
+  "description": "Code and data to derive data products and reports from HRA sources",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/x-atlas-consortia/hra-data-products.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/x-atlas-consortia/hra-data-products/issues"
+  },
+  "homepage": "https://github.com/x-atlas-consortia/hra-data-products#readme",
+  "dependencies": {
+    "fetch-sparql-endpoint": "^7.1.0",
+    "glob": "^13.0.5",
+    "papaparse": "^5.5.3",
+    "shelljs": "^0.10.0",
+    "sparqljs": "^3.7.4",
+    "sparqljson-parse": "^3.3.0"
+  }
+}

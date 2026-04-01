@@ -1,0 +1,9 @@
+named_graph,download_url
+https://purl.wholepersonphysiome.org,https://cdn.wholepersonphysiome.org/digital-objects/catalog.ttl
+https://purl.wholepersonphysiome.org/collection/wpp,https://cdn.wholepersonphysiome.org/digital-objects/collection/wpp/draft/graph.ttl
+https://lod.humanatlas.io,https://cdn.humanatlas.io/digital-objects/catalog.ttl
+https://purl.humanatlas.io/collection/hra,https://cdn.humanatlas.io/digital-objects/collection/hra/latest/graph.ttl
+https://purl.humanatlas.io/collection/hra-api,https://cdn.humanatlas.io/digital-objects/collection/hra-api/latest/graph.ttl
+https://purl.humanatlas.io/vocab/uberon,https://cdn.humanatlas.io/digital-objects/vocab/uberon/latest/graph.ttl
+https://purl.humanatlas.io/vocab/cl,https://cdn.humanatlas.io/digital-objects/vocab/cl/latest/graph.ttl
+https://purl.humanatlas.io/vocab/hp,https://cdn.humanatlas.io/digital-objects/vocab/hp/latest/graph.ttl
