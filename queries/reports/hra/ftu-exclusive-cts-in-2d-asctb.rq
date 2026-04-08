@@ -5,6 +5,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX schema: <http://schema.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX ccf: <http://purl.org/ccf/>
 PREFIX CL: <http://purl.obolibrary.org/obo/CL_>
 PREFIX UBERON: <http://purl.obolibrary.org/obo/UBERON_>
@@ -14,7 +15,7 @@ PREFIX body: <http://purl.obolibrary.org/obo/UBERON_0013702>
 PREFIX HRA: <https://purl.humanatlas.io/collection/hra>
 PREFIX LOD: <https://lod.humanatlas.io>
 
-SELECT DISTINCT ?ftu_purl ?ftu_label ?ct_label ?in_2d_ftu ?in_asctb 
+SELECT DISTINCT ?organ_iri ?organ_label ?ftu_purl ?ftu_label ?ct_label ?in_2d_ftu ?in_asctb 
   (IF(!BOUND(?not_exclusive) && ?in_asctb, true, '') as ?exclusive_ct_in_ftu)
   ?ftu_iri ?ct_iri
 FROM HRA:
@@ -26,7 +27,9 @@ WHERE {
       ccf:part_of_illustration ?ftu_illustration;
       ccf:representation_of ?ct_iri ;
     ] .
-    ?ftu_illustration ccf:representation_of ?ftu_iri .
+    ?ftu_illustration ccf:representation_of ?ftu_iri ;
+      ccf:ccf_located_in ?organ_iri .
+    ?organ_iri skos:prefLabel ?organ_label .
     FILTER(STRSTARTS(STR(?ct_iri), STR(CL:)))
     BIND(IRI(STRBEFORE(STR(?ftu_illustration), '#')) as ?ftu_purl)
     ?ftu_iri rdfs:label ?ftu_label .
@@ -100,4 +103,4 @@ WHERE {
     ?ct_iri rdfs:label ?ct_label .
   }
 }
-ORDER BY ?ftu_iri ?ct_iri
+ORDER BY ?organ_label ?ftu_iri ?ct_iri
