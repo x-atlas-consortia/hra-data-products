@@ -1,0 +1,36 @@
+#+ summary: ASCT+B FTU types that are not represented by any 2D FTU illustration
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ccf: <http://purl.org/ccf/>
+PREFIX part_of: <http://purl.obolibrary.org/obo/BFO_0000050>
+PREFIX HRA: <https://purl.humanatlas.io/collection/hra>
+
+SELECT ?table ?asctb_ftu_label ?asctb_ftu_iri (COUNT(DISTINCT ?record) as ?record_count)
+  (GROUP_CONCAT(DISTINCT ?illustration_ftu_label; separator='; ') as ?part_of_2d_ftu_labels)
+  (GROUP_CONCAT(DISTINCT STR(?illustration_ftu_iri); separator='; ') as ?part_of_2d_ftu_iris)
+FROM HRA:
+FROM <https://purl.humanatlas.io/vocab/uberon>
+WHERE {
+  ?record a ccf:AsctbRecord ;
+    ccf:ftu_types [
+      ccf:source_concept ?asctb_ftu_iri
+    ] .
+  BIND(STRBEFORE(REPLACE(STRBEFORE(STR(?record), '#'), 'https://purl.humanatlas.io/asct-b/', ''), '/') as ?table)
+
+  FILTER NOT EXISTS {
+    [] a ccf:FtuIllustration ;
+      ccf:representation_of ?asctb_ftu_iri .
+  }
+
+  OPTIONAL { ?asctb_ftu_iri rdfs:label ?asctb_ftu_label . }
+
+  # 2D FTUs that this ASCT+B FTU is a part of (likely intended matches)
+  OPTIONAL {
+    ?illustration a ccf:FtuIllustration ;
+      ccf:representation_of ?illustration_ftu_iri .
+    ?asctb_ftu_iri (ccf:ccf_part_of|part_of:)+ ?illustration_ftu_iri .
+    OPTIONAL { ?illustration_ftu_iri rdfs:label ?illustration_ftu_label . }
+  }
+}
+GROUP BY ?table ?asctb_ftu_label ?asctb_ftu_iri
+ORDER BY ?table ?asctb_ftu_label
